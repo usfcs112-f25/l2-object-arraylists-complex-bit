@@ -1,19 +1,19 @@
 # Checklist
 ## Assignment Requirements
 ### [ ] Student Class
-[x] Student ID (integer)
-[x] First Name (string)
-[x] Last Name (string)
-[x] Email (string)
-[x] Major (string)
-[x] GPA (double)
-[x] Credit Hours (integer)
-[x] House (String)
-[x] Private instance variables for all data fields
-[x] A parameterized constructor that accepts all field values
-[x] Getter methods for all fields
-[x] A toString() method that returns a formatted string representation
-[ ] An equals() method that compares students by ID
+- [x] Student ID (integer)\n
+- [x] First Name (string)\n
+- [x] Last Name (string)\n
+- [x] Email (string)\n
+- [x] Major (string)\n
+- [x] GPA (double)\n
+- [x] Credit Hours (integer)\n
+- [x] House (String)\n
+- [x] Private instance variables for all data fields\n
+- [x] A parameterized constructor that accepts all field values\n
+- [x] Getter methods for all fields\n
+- [x] A toString() method that returns a formatted string representation\n
+- [ ] An equals() method that compares students by ID\n
 
 ### [x] CSVProcessor Class
 [x] A method to read the CSV file and return an array of Student objects
@@ -26,7 +26,7 @@
 [x] Methods to display student information
 [x] At least one method that performs analysis on the student data (e.g., calculate average GPA, count students by major)
 [] Technical Specifications
-[] File Processing Requirements
+[x] File Processing Requirements
 [x] Use Java’s built-in file reading capabilities (Scanner, BufferedReader, or similar)
 [x] Parse CSV data manually (do not use external libraries)
 [x] Handle the header row appropriately
