@@ -1,90 +1,36 @@
-
-// import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
-// import java.util.NoSuchElementException;
-// import java.util.Hashtable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * <h1>StudentManager</h1>
+ * <h4>Main class for lab</h4>
+ * <p>
+ * @brief Runs a menu displaying Hogwarts information.
+ * <p>
+ * @author Eric T
+ * @github complex-bit
+ * @version 2 August 2025 
+*/
 public class StudentManager {
-    // TODO: change(FILE) -> args[0]
     private static final int ERROR = -1;
     private static final double HONORS_MIN = 3.5;
-    private static final String FILE = "hogwarts-students.csv";
-    private static final String KEYS[] = {"la", "lh", "ag", "sg", "lm", "ls", "sh", "ss", "xt"};
-    private static CSVProcessor processor;
+    private static double averageGpa = ERROR;
     private static ArrayList<Student> students;
     private static ArrayList<Student> honors; 
+    private static CSVProcessor processor;
     private static Set<String> houses;
-    private static double averageGpa = ERROR;
-
-
-
-    // private static HashMap<String, HashMap<String, Integer>> houseStudents; // house, student_name, student_gpa
-    
-    /* Attempt1: 
-    private static String getCommand() { // NOT WORKING AAH!
-        // Scanner keyboard = new Scanner(System.in);
-        Scanner keyboard = new Scanner(System.in);
-        String nextCommand = "";
-        if (keyboard.hasNext()) {
-            nextCommand = keyboard.next();
-        } else {
-            System.out.println("scanner no have next");
-            keyboard.nextLine();
-            keyboard.close();
-            return getCommand();
-        }
-        // try {
-        for (String command : commands) {
-            System.out.println(command);
-            if (command.equals(nextCommand)) {
-                keyboard.nextLine();
-                keyboard.close();
-                return command;
-            }
-        }
-        // } catch (NoSuchElementException nee) { System.out.println("Invalid command"); }
-        keyboard.close();
-
-        // If command was never found recurse:
-        System.out.println("Command not found");
-        return getCommand();
-    }
-    */
-    /* Attempt2:
-    private static String getCommand(Scanner scanner) {
-        String command = "";
-        if (scanner.hasNextLine()) {
-            command = scanner.next();
-            System.out.println(command + " `in getCommand`");
-            //scanner.close();
-            return command;
-        }
-        //scanner.close();
-        return getCommand(scanner);
-    }
-    */
-    /* Might not use:
-    private static Hashtable<String, String> setupCommands() {
-        String NAMES[] = {"allStudents", "houseStudents", "majorCount", "honorStudents", "exit"};
-        String KEYS[] = {"va", "vh", "vm", "vs", "x"};
-        if (NAMES.length != KEYS.length) {
-            System.out.println("ERROR: " + NAMES.length + " != " + KEYS.length + " exiting");
-            System.exit(1);
-        }
-        for (int i = 0; i < KEYS.length; i++) {
-            commands.put(NAMES[i], KEYS[i]);
-        }
-        return commands;
-    }
-    */
+    private static String command;
+    private static final String KEYS[] = {
+        "la", "lh", "ag", "sg", "lm", "ls", "sv", "sh", "so", "hg", "ex"
+    };
 
     private static String getCommand(Scanner scanner) {
         System.out.print("\t> ");
@@ -124,36 +70,6 @@ public class StudentManager {
         }
     }
 
-    /* Attempt 1 -> too complicated:
-    private static void displayStudentsByHouse() {
-        // Only find houses if not yet found: (no longer needed)
-        // if (houses == null || houses.size() != KOWN_HOUSES.length) { findHouses(); }
-        System.out.println("\t" + houses);
-        houseStudents = new HashMap<String, HashMap<String, Integer>>();
-        for (Student student : students) {
-            if (houses.contains(student.getHouse())) {
-                houseStudents.get(student.getHouse()) = 
-            }
-            for (String house : houses) {
-                if (student.getHouse().equals(house)) {
-                    houseStudents.put(house, student.getFirstName() + " " + student.getLastName());
-                }
-            }
-            // houseStudents.put(house, );
-        }
-        // System.out.println(houseStudents);
-
-        for (String house : houseStudents.keySet()) {
-            System.out.println("Students in " + house + ":");
-            System.out.println(houseStudents.get(house));
-        }
-    }
-    */
-
-    /**
-     * <h3> queryHouse <h3>
-     * @brief used whenever we need to get a house choice from the user.
-    */
     private static String queryHouse(Scanner scanner) {
         System.out.print("\n\tEnter house > ");
         String inputHouse = scanner.next();
@@ -184,7 +100,6 @@ public class StudentManager {
         int count = 0;
         double average;
         if (students.isEmpty()) {
-            // Student class should not be empty:
             System.out.println("ERROR: student class is empty");
             return;
         }
@@ -194,7 +109,6 @@ public class StudentManager {
                 count++;
             }
         }
-        // might not need this try block:
         try {
             average = sum / count;
             System.out.printf("\n\tThe average GPA in %s is %.2f\n", house, average);
@@ -208,7 +122,7 @@ public class StudentManager {
         int sum = 0;
         int count = 0;
         for (Student student : students) {
-            // Ensure average does not include -1:
+            // Ensure average does not include the error value:
             if (student.getGpa() != ERROR) {
                 sum += student.getGpa();
                 count++;
@@ -299,6 +213,52 @@ public class StudentManager {
         search(scanner);
     }
 
+    private static void sortStudents(Scanner scanner) {
+        ArrayList<String> commands = new ArrayList<String>(Arrays.asList("name", "gpa", "ex"));
+        ArrayList<Student> sortedStudents = students;
+        System.out.printf("\tEnter 'name', 'gpa' or 'ex' to exit >");
+        String command = scanner.next();
+        if (!commands.contains(command)) {
+            System.out.printf("\t%s not in :", command);
+            System.out.print(commands);
+            sortStudents(scanner);
+        }
+        if (command.equals(commands.get(0))) {
+            sortedStudents.sort(Comparator.comparing(Student::getFirstName));
+        }
+        if (command.equals(commands.get(1))) {
+            sortedStudents.sort(Comparator.comparing(Student::getGpa));
+        }
+        if (command.equals(commands.get(2))) {
+            return;
+        }
+        for (Student student : students) {
+            System.out.printf("%s %s\n", student.getFirstName(), student.getLastName());
+        }
+        sortStudents(scanner);
+    }
+
+    private static void listGpaAbove(Scanner scanner) {
+        double gpa;
+        try {
+            System.out.print("Enter GPA > ");
+            gpa = Double.parseDouble(scanner.next());
+            if (gpa > 4.0 || gpa < 0.0) { 
+                System.out.println("Invalid gpa");
+                listGpaAbove(scanner);
+            }
+            for (Student student : students) {
+                if (student.getGpa() > gpa) {
+                    System.out.printf("s% s%", student.getFirstName(), student.getLastName());
+                }
+            }
+            
+        } catch (NumberFormatException nfe) {
+            System.out.println("Invalid gpa");
+            return;
+        }
+    }
+
     private static void runMenu(Scanner scanner) {
         System.out.printf(
             "\n\tMENU:\n" +
@@ -310,32 +270,40 @@ public class StudentManager {
               "\tList students in honors ................... %s\n" +
               "\tSave students in honors and average GPA ... %s\n" +
               "\tSearch for student ........................ %s\n" +
+              "\tSort students by first name or GPA ........ %s\n" +
+              "\tList students with higeher GPA ............ %s\n" +
               "\tExit ...................................... %s\n\n",
                KEYS[0], KEYS[1], KEYS[2], KEYS[3], KEYS[4], KEYS[5], 
-               KEYS[6], KEYS[7], KEYS[8]
+               KEYS[6], KEYS[7], KEYS[8], KEYS[9], KEYS[10]
         );
-
-        String command = getCommand(scanner); 
-
-        if (command.equals(KEYS[0])) { displayAllStudents();            }
-        if (command.equals(KEYS[1])) { displayStudentsByHouse(scanner); }
-        if (command.equals(KEYS[2])) { displayHouseGPA(scanner);        }
-        if (command.equals(KEYS[3])) { saveGpa();                       }
-        if (command.equals(KEYS[4])) { displayMajorCount();             }
-        if (command.equals(KEYS[5])) { displayHonorsStudents();         }
-        if (command.equals(KEYS[6])) { saveHonors();                    }
-        if (command.equals(KEYS[7])) { search(scanner);                 }
-        if (command.equals(KEYS[8])) { return;                          }
+        command = getCommand(scanner); 
+        if (command.equals(KEYS[0]))  { displayAllStudents();            }
+        if (command.equals(KEYS[1]))  { displayStudentsByHouse(scanner); }
+        if (command.equals(KEYS[2]))  { displayHouseGPA(scanner);        }
+        if (command.equals(KEYS[3]))  { saveGpa();                       }
+        if (command.equals(KEYS[4]))  { displayMajorCount();             }
+        if (command.equals(KEYS[5]))  { displayHonorsStudents();         }
+        if (command.equals(KEYS[6]))  { saveHonors();                    }
+        if (command.equals(KEYS[7]))  { search(scanner);                 }
+        if (command.equals(KEYS[8]))  { sortStudents(scanner);           }
+        if (command.equals(KEYS[9]))  { listGpaAbove(scanner);           }
+        if (command.equals(KEYS[10])) { return;                          }
         runMenu(scanner);
     }
 
     /** 
-     * @param args Not being used for now.
+     * <h3>main</h3>
+     * @brief Sets up needed information before displaying a menu.
+     * @param args The filename is povided as `args[0]`.
     */
     public static void main(String[] args) {
-        // TODO: maybe make house class and fill with student objects at the beginning of program.
-        processor = new CSVProcessor(FILE);
-        students = processor.readCSV();
+        if (args.length == 0) {
+            System.out.println("ERROR: No filename provided");
+            return;
+        }
+        // Processor handles file errors:
+        processor = new CSVProcessor(args[0]);
+        students = processor.readCsv();
         Scanner scanner = new Scanner(System.in);
 
         // Call these functions before the menu to set up lists:
@@ -346,17 +314,3 @@ public class StudentManager {
         scanner.close();
     }
 }
-
-/* Questions:
- * Github assignment repo commits?
- * Should save options be in main menu or follow other commands?
- * Save all gpa of house or all students?
- * Is there a better way to store the constants?
- * Can key commands and coresponding functions be stored in hash map?
- * If going for A do we need gpa.txt and analysis.txt
- * Should filenames for output files be input by user? 
- * if error occurs when parsing number in processor print message or fail silently?
- * Extra credit sorted list of what? all students?
- * Coding faster
-*/
-

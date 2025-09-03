@@ -1,8 +1,8 @@
 # Lab 2
 
 ## Requirements
-Eric Taylor 20707455
-Attempting: A
+- Eric Taylor 20707455
+- Attempting: A
 
 ## Running Program
 1. `javac StudentManager.java`
