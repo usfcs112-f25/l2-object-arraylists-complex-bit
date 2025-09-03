@@ -1,0 +1,253 @@
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+/**
+ * A method to read the CSV file and return an array of Student objects
+ * Proper exception handling for file operations
+ * Input validation for data types and required fields
+ * 
+*/
+public class CSVProcessor {
+    private static final int ZERO  =  0;
+    private static final int ONE   =  1;
+    private static final int TWO   =  2;
+    private static final int THREE =  3;
+    private static final int FOUR  =  4;
+    private static final int FIVE  =  5;
+    private static final int SIX   =  6;
+    private static final int SEVEN =  7;
+    private static final int ERROR = -1;
+    private static final String NONE = "NONE";
+    private static final int ID_LENGTH = FOUR;
+    private final String KNOWN_HOUSES[] = {"Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"};
+    private final String file;
+
+
+    CSVProcessor(String instanceFilename) {
+        file = instanceFilename;
+    }
+
+    public String[] getKnownHouses() {
+        return this.KNOWN_HOUSES;
+    }
+
+    /* Verifies the value for each column:
+    // Do later
+    private static boolean verifyColumn(ArrayList<String> header, String line) { 
+        for (String columnName : header) {
+            System.out.println(columnName);
+        }
+        return true;
+    }
+    */
+    
+    private static LinkedList<String> split(String line) {
+        LinkedList<String> fields = new LinkedList<String>();
+        String field = "";
+        for (int i = ZERO; i < line.length(); i++) {
+            if (line.charAt(i) == ',') {
+                fields.add(field);
+                field = "";
+            } 
+            else {
+                field += line.charAt(i);
+            }
+        }
+        fields.add(field);
+        return fields;
+    }
+    /**
+     * @brief Read the CSV file and return an array of Student objects.
+     * @return An array of `Student` objects.
+    */
+
+    private static boolean alphanumeric(char character) {
+        return character >= '0' && character <= '9';
+    }
+
+    private static boolean alphabetic(char character) {
+        return (character >= 'a' && character <= 'z') || uppercase(character);
+    }
+    
+    private static boolean uppercase(char character) {
+        return (character >= 'A' && character <= 'Z');
+    }
+
+    private static char convertCase(char letter) {
+        final int ADDEND = 32;
+        if (!alphabetic(letter)) {
+            System.out.printf("ERROR: skipped '%c', because is not alphabetic\n", letter);
+            return letter;
+        }
+        if (uppercase(letter)) {
+            // ASCII uppercase to lowercase:
+            return (char)((int)letter + ADDEND);
+        }
+        // ASCII lowercase to uppercase:
+        return (char)((int)letter - ADDEND);
+    }
+    
+    private static int convertInteger(String characters) {
+        try {
+            return Integer.parseInt(characters);
+        } catch (NumberFormatException nfe) {
+            // System.out.printf("ERROR: parsing '%s' from string to integer", characters);
+            return ERROR;
+        }
+    }
+
+    private static double convertDouble(String characters) {
+        try {
+            return Double.parseDouble(characters);
+        } catch (NumberFormatException nfe ) {
+            // System.out.printf("ERROR: parsing '%s' from string to double", characters);
+            return ERROR;
+        }
+    }
+    
+    /**
+     * If zero is returned something went wrong.
+    */
+    private static int validId(String idIn) {
+        int idOut = convertInteger(idIn);
+        // Validate ID length:
+        if ((int)Math.log10(idOut) + ONE != ID_LENGTH) {
+            return ERROR;
+        }
+
+        return idOut;
+    }
+
+    private static String validName(String name) {
+        String formatedName = "";
+
+        // Ensure first character of name is upper case:
+        if (!uppercase(name.charAt(ZERO))) {
+            formatedName += convertCase(name.charAt(ZERO));
+        } else {
+            formatedName += name.charAt(ZERO);
+        }
+        // Loop skips first character:
+        for (int i = 1; i < name.length(); i++) {
+            if (!alphabetic(name.charAt(i))) {
+                // System.out.printf("ERROR: skipped '%c' because is not alphabetic\n", name.charAt(i));
+                return NONE;
+            }
+            formatedName += name.charAt(i);
+        }
+        return formatedName;
+    }
+
+    private static String validEmail(String email) {
+        final char AT = '@';
+        final char DOT = '.';
+        int atCount = ZERO;
+        int dotCount = ZERO;
+        String cleanEmail = "";
+
+        for (int i = ZERO; i < email.length(); i++) {
+            char current = email.charAt(i);
+            // check if dot precedes at:
+            if (atCount == ZERO && dotCount != ZERO) {
+                return NONE;
+            }
+            
+            if (current == AT) {
+                atCount++;
+            }
+            if (current == DOT) {
+                dotCount++;
+            }
+            if (alphabetic(current) || alphanumeric(current) ||
+                current == AT || current == DOT) {
+                    cleanEmail += current;
+            }
+        }
+        
+        if (!(atCount == ONE && dotCount == ONE)) {
+            return NONE;
+        }
+        return cleanEmail;
+    }    
+    
+    private static String validMajor(String major) {
+        final char MOD = '&';
+        final char SPACE = ' ';
+        for (int i = ZERO; i < major.length(); i++) {
+            char current = major.charAt(i);
+            if (!(alphabetic(current) || current == MOD || current == SPACE)) {
+                return NONE;
+            }
+        }
+        return major;
+    }
+
+    private static double validGpa(String gpa) {
+        double cleanGpa = convertDouble(gpa);
+        if (cleanGpa >= (double)ZERO && cleanGpa <= (double)FOUR) {
+            return cleanGpa;
+        }
+        return ERROR;
+    }
+
+    private static int validCredit(String hours) {
+        return convertInteger(hours);
+    }
+
+    private String validHouse(String house) {
+        for (int i = 0; i < KNOWN_HOUSES.length; i++) {
+            if (KNOWN_HOUSES[i].equals(validName(house))) {
+                return KNOWN_HOUSES[i];
+            }
+        }
+        return NONE;
+    }
+
+    public ArrayList<Student> readCSV() {    
+        ArrayList<Student> students = new ArrayList<Student>();
+        BufferedReader in;
+        try { 
+            in = new BufferedReader(new FileReader(file));
+            // String firstLine = in.readLine();
+            
+            String line = in.readLine();
+            // ArrayList<String> header = split(line);
+            // System.out.println(header);
+
+            while ((line = in.readLine()) != null) {
+                // System.out.println(line);
+                // ArrayList<String> fields = split(line);
+                LinkedList<String> fields = split(line);
+                /* 
+                System.out.println("\nFields:");
+                for (String field : fields) { 
+                    System.out.println(field);
+                }
+                */
+                Student student = new Student(
+                    validId(fields.get(ZERO)), 
+                    validName(fields.get(ONE)),
+                    validName(fields.get(TWO)),
+                    validEmail(fields.get(THREE)),
+                    validMajor(fields.get(FOUR)),
+                    validGpa(fields.get(FIVE)),
+                    validCredit(fields.get(SIX)),
+                    validHouse(fields.get(SEVEN))
+                );
+                
+                // System.out.println(student);
+                students.add(student);
+            }
+
+            in.close();
+        }
+        catch(IOException ioe) { 
+            System.out.println("Invalid Filename: " + file);
+        }
+        return students;
+    }
+}
